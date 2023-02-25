@@ -30,7 +30,7 @@ while True:
         image_file.write(base64.b64decode(bytes(file_contents, 'utf-8')))   
         image_file.close();
 
-        output = subprocess.getoutput('python3 /home/ubuntu/image_classification.py ' + temp_file_path);
+        output = subprocess.getoutput('python3 /home/ubuntu/image_classification.py ' + image_file_path);
         print(output);
 
         sqs.send_message(QueueUrl=response_queue_url, DelaySeconds=10, MessageBody=output)
