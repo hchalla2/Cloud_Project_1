@@ -25,7 +25,7 @@ while True:
 
         sqs.delete_message(QueueUrl=request_queue_url, ReceiptHandle=message['ReceiptHandle']);
 
-        image_file_path = "/home/ubuntu/app/" + filename
+        image_file_path = "/home/ubuntu/Cloud_Project_1/tmp/" + filename
         image_file = open(image_file_path, 'wb');
         image_file.write(base64.b64decode(bytes(file_contents, 'utf-8')))   
         image_file.close();
@@ -36,7 +36,7 @@ while True:
         sqs.send_message(QueueUrl=response_queue_url, DelaySeconds=10, MessageBody=output)
         print('Response sent');
 
-        output_file_path = "/home/ubuntu/app/output_" + filename;
+        output_file_path = "/home/ubuntu/Cloud_Project_1/tmp/output_" + filename;
         output_file = open(output_file_path, 'wb');
         output_file.write(bytes(output, 'utf-8'));
         output_file.close();    
