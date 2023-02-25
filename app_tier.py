@@ -25,8 +25,8 @@ while True:
 
         sqs.delete_message(QueueUrl=request_queue_url, ReceiptHandle=message['ReceiptHandle']);
 
-        temp_file_path = "/home/ubuntu/app/" + filename
-        image_file = open(temp_file_path, 'wb');
+        image_file_path = "/home/ubuntu/app/" + filename
+        image_file = open(image_file_path, 'wb');
         image_file.write(base64.b64decode(bytes(file_contents, 'utf-8')))   
         image_file.close();
 
@@ -36,16 +36,21 @@ while True:
         sqs.send_message(QueueUrl=response_queue_url, DelaySeconds=10, MessageBody=output)
         print('Response sent');
 
-        out_file_path = "/home/ubuntu/app/output_" + filename;
-        output_file = open(out_file_path, 'wb');
+        output_file_path = "/home/ubuntu/app/output_" + filename;
+        output_file = open(output_file_path, 'wb');
         output_file.write(bytes(output, 'utf-8'));
         output_file.close();    
 
         bucket_name = "output-bucket-hsh"
         object_name = "output_" + filename
-        file_name = out_file_path;
+        file_name = output_file_path;
         store_file(bucket_name, file_name, object_name);
 
+        if os.path.exists(output_file_path):
+            os.remove(output_file_path)
+
+        if os.path.exists(image_file_path):
+            os.remove(image_file_path)
 
 
 
