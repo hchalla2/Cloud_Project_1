@@ -20,7 +20,7 @@ def get_response_queue_url():
 def get_input_bucket():
     return input_bucket;
 
-def get_output_bucket();
+def get_output_bucket():
     return output_bucket;
 
 
