@@ -11,6 +11,15 @@ s3 = boto3.resource("s3", aws_access_key_id=get_access_key(), aws_secret_access_
 sqs = boto3.client("sqs", aws_access_key_id=get_access_key(), aws_secret_access_key=get_secret_key(), region_name='us-east-1');
 tmp_folder = "/home/ubuntu/Cloud_Project_1/tmp/";
 
+def remove_file(file_path):
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+def save_file(file_path, file_content):
+    image_file = open(file_path, 'wb');
+    image_file.write(file_content)
+    image_file.close();
+
 while True:
 
     response = sqs.receive_message(QueueUrl=get_request_queue_url(),
@@ -24,12 +33,12 @@ while True:
         filename = message_dict['file_name'];
         file_contents = message_dict['file_content'];
 
+        file_name_without_format = filename.split('.')[0] + ".txt";
+
         sqs.delete_message(QueueUrl=get_request_queue_url(), ReceiptHandle=message['ReceiptHandle']);
 
         image_file_path = tmp_folder + filename
-        image_file = open(image_file_path, 'wb');
-        image_file.write(base64.b64decode(bytes(file_contents, 'utf-8')))   
-        image_file.close();
+        save_file(image_file_path, base64.b64decode(bytes(file_contents, 'utf-8')))
 
         output = classify_image(image_file_path);
         # print(output);
@@ -37,26 +46,14 @@ while True:
         sqs.send_message(QueueUrl=get_response_queue_url(), DelaySeconds=10, MessageBody=output)
         # print('Response sent');
 
-        output_file_path = tmp_folder + "output_" + filename;
-        output_file = open(output_file_path, 'wb');
-        output_file.write(bytes(output, 'utf-8'));
-        output_file.close();    
+        output_file_path = tmp_folder + "output_" + file_name_without_format;
+        save_file(output_file_path, bytes(output, 'utf-8'));
 
-        store_file(get_output_bucket(), output_file_path, "output_" + filename);
+        store_file(get_output_bucket(), output_file_path, "output_" + file_name_without_format);
         store_file(get_input_bucket(), image_file_path, filename);
 
-        if os.path.exists(output_file_path):
-            os.remove(output_file_path)
-
-        if os.path.exists(image_file_path):
-            os.remove(image_file_path)
-
-
-
-
-
-
-
+        remove_file(output_file_path);
+        remove_file(image_file_path);
 
 
 
