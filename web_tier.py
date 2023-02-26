@@ -39,17 +39,20 @@ def queue_listener():
 
 async def get_output(file_name):
     while True:
-        if file_name in result_dict:
-            output = result_dict[file_name];
-            
-            del result_dict[file_name];
-            return output;
+        lock.acquire()
+        try:
+            if file_name in result_dict:
+                output = result_dict[file_name];
+                del result_dict[file_name];
+                return output;
+        finally:
+                lock.release();
 
 @app.post("/recognize_image/")
 async def recognize_image(file: UploadFile):
     file_name = str(file.filename);
     file_content = file.file.read();
-    converted_string = base64.b64encode(file_content)
+    converted_string = base64.b64encode(file_content)   
 
     message = {'file_name' : file_name, 'file_content' : str(converted_string, 'utf-8')};
     body = json.dumps(message);
