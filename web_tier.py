@@ -44,9 +44,9 @@ async def get_output(file_name):
             if file_name in result_dict:
                 output = result_dict[file_name];
                 del result_dict[file_name];
-                return output;
         finally:
                 lock.release();
+        return output;
 
 @app.post("/recognize_image/")
 async def recognize_image(file: UploadFile):
