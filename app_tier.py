@@ -49,8 +49,8 @@ while True:
         output_file_path = tmp_folder + "output_" + file_name_without_format;
         save_file(output_file_path, bytes(output, 'utf-8'));
 
-        store_file(get_output_bucket(), output_file_path, "output_" + file_name_without_format);
-        store_file(get_input_bucket(), image_file_path, filename);
+        store_file(get_output_bucket(), open('output_file_path', 'rb').read(), "output_" + file_name_without_format);
+        store_file(get_input_bucket(), open('image_file_path', 'rb').read(), filename);
 
         remove_file(output_file_path);
         remove_file(image_file_path);
