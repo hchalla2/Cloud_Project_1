@@ -8,7 +8,6 @@ from s3_util import *;
 from sqs_util import *;
 
 tmp_folder = "/home/ubuntu/Cloud_Project_1/tmp/";
-sqs = boto3.client("sqs", aws_access_key_id=get_access_key(), aws_secret_access_key=get_secret_key(), region_name='us-east-1');
 
 def remove_file(file_path):
     if os.path.exists(file_path):
@@ -21,7 +20,7 @@ def save_file(file_path, file_content):
 
 while True:
 
-    response = sqs.receive_message(QueueUrl=get_request_queue_url(), MaxNumberOfMessages=1, WaitTimeSeconds=10)
+    response = receive_message(get_request_queue_url())
 
     for message in response.get("Messages", []):
         message_body = message["Body"]
