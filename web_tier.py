@@ -63,6 +63,7 @@ async def recognize_image(file: UploadFile):
                 MessageBody=body)
 
     out = await get_output(file_name);
+    print("Response received:- for file_name " + out);
     return {file_name : out };
 
 
