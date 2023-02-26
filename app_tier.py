@@ -4,7 +4,6 @@ import pathlib
 import os, subprocess,json,base64
 from image_classification import classify_image;
 from config import *;
-from sqs_util import *;
 from s3_util import *;
 
 tmp_folder = "/home/ubuntu/Cloud_Project_1/tmp/";
@@ -20,17 +19,16 @@ def save_file(file_path, file_content):
 
 while True:
 
-    response = receive_message(get_request_queue_url());
+    response = sqs.receive_message(QueueUrl=get_request_queue_url(), MaxNumberOfMessages=1, WaitTimeSeconds=10)
 
     for message in response.get("Messages", []):
         message_body = message["Body"]
         message_dict = json.loads(message_body);
         filename = message_dict['file_name'];
         file_contents = message_dict['file_content'];
-
         file_name_without_format = filename.split('.')[0] + ".txt";
 
-        delete_message(get_request_queue_url(), message['ReceiptHandle'])
+        sqs.delete_message(QueueUrl=get_request_queue_url(), ReceiptHandle=message['ReceiptHandle']);
 
         image_file_path = tmp_folder + filename
         save_file(image_file_path, base64.b64decode(bytes(file_contents, 'utf-8')))
@@ -38,7 +36,7 @@ while True:
         output = classify_image(image_file_path);
         # print(output);
 
-        send_message(get_response_queue_url(), output);
+        send_message(get_response_queue_url(), output)
         # print('Response sent');
 
         output_file_path = tmp_folder + "output_" + file_name_without_format;

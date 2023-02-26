@@ -1,9 +1,8 @@
 import uvicorn
 from fastapi import FastAPI, UploadFile
 import json,base64;
-import threading,boto3;
+import threading
 import asyncio
-import time;
 from config import *;
 from sqs_util import *;
 
@@ -12,9 +11,11 @@ app = FastAPI()
 
 result_dict = {};
 
+sqs = boto3.client("sqs", aws_access_key_id=get_access_key(), aws_secret_access_key=get_secret_key(), region_name='us-east-1');
+
 def queue_listener():
     while True:
-        response = receive_message(get_response_queue_url());
+        response = sqs.receive_message(QueueUrl=get_response_queue_url(), MaxNumberOfMessages=1, WaitTimeSeconds=10)
         for message in response.get("Messages", []):
             message_body = message["Body"]
             file_output = message_body.split(','); 
@@ -27,7 +28,7 @@ def queue_listener():
             finally:
                 lock.release();
 
-            delete_message(get_response_queue_url(), message['ReceiptHandle']);
+            sqs.delete_message(QueueUrl=get_response_queue_url(), ReceiptHandle=message['ReceiptHandle']);
 
 async def get_output(file_name):
     while True:
@@ -50,7 +51,7 @@ async def recognize_image(file: UploadFile):
     body = json.dumps(message);
 
     # Send message to SQS queue
-    send_message(get_request_queue_url(),body);
+    sqs.send_message(QueueUrl=get_request_queue_url(), DelaySeconds=10, MessageBody=body)
     
     print("Sent " + file_name + " into the request queue");
     out = await get_output(file_name);
