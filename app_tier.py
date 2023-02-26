@@ -4,7 +4,7 @@ import pathlib
 import os, subprocess,json,base64
 from s3_util import *
 from image_classification import classify_image;
-from constants import *;
+from config import *;
 
 
 s3 = boto3.resource("s3", aws_access_key_id=get_access_key(), aws_secret_access_key=get_secret_key())

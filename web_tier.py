@@ -4,7 +4,7 @@ import json,base64;
 import threading,boto3;
 import asyncio
 import time;
-from constants import *;
+from config import *;
 
 lock = threading.Lock()
 app = FastAPI()
