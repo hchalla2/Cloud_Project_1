@@ -39,6 +39,7 @@ def queue_listener():
 
 async def get_output(file_name):
     while True:
+        await asyncio.sleep(1);
         with lock:
             if file_name in result_dict:
                 output = result_dict[file_name];
@@ -60,9 +61,11 @@ async def recognize_image(file: UploadFile):
     sqs.send_message(QueueUrl=request_queue_url,
                 DelaySeconds=10,
                 MessageBody=body)
+    
+    print("Sent " + file_name + " into the request queue");
 
     out = await get_output(file_name);
-    print("Response received:- for file_name " + out);
+    print("Response received:- for " + file_name + "  :- " + out);
     return {file_name : out };
 
 
