@@ -2,13 +2,11 @@ import boto3
 from pprint import pprint
 import pathlib
 import os, subprocess,json,base64
-from s3_util import *
 from image_classification import classify_image;
 from config import *;
+from sqs_util import *;
+from s3_util import *;
 
-
-s3 = boto3.resource("s3", aws_access_key_id=get_access_key(), aws_secret_access_key=get_secret_key())
-sqs = boto3.client("sqs", aws_access_key_id=get_access_key(), aws_secret_access_key=get_secret_key(), region_name='us-east-1');
 tmp_folder = "/home/ubuntu/Cloud_Project_1/tmp/";
 
 def remove_file(file_path):
@@ -22,10 +20,7 @@ def save_file(file_path, file_content):
 
 while True:
 
-    response = sqs.receive_message(QueueUrl=get_request_queue_url(),
-                                    MaxNumberOfMessages=1,
-                                    WaitTimeSeconds=10)
-
+    response = receive_message(get_request_queue_url());
 
     for message in response.get("Messages", []):
         message_body = message["Body"]
@@ -35,7 +30,7 @@ while True:
 
         file_name_without_format = filename.split('.')[0] + ".txt";
 
-        sqs.delete_message(QueueUrl=get_request_queue_url(), ReceiptHandle=message['ReceiptHandle']);
+        delete_message(get_request_queue_url(), message['ReceiptHandle'])
 
         image_file_path = tmp_folder + filename
         save_file(image_file_path, base64.b64decode(bytes(file_contents, 'utf-8')))
@@ -43,7 +38,7 @@ while True:
         output = classify_image(image_file_path);
         # print(output);
 
-        sqs.send_message(QueueUrl=get_response_queue_url(), DelaySeconds=10, MessageBody=output)
+        send_message(get_response_queue_url(), output);
         # print('Response sent');
 
         output_file_path = tmp_folder + "output_" + file_name_without_format;

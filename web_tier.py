@@ -5,19 +5,16 @@ import threading,boto3;
 import asyncio
 import time;
 from config import *;
+from sqs_util import *;
 
 lock = threading.Lock()
 app = FastAPI()
 
 result_dict = {};
 
-sqs = boto3.client("sqs", aws_access_key_id=get_access_key(), aws_secret_access_key=get_secret_key(), region_name='us-east-1');
-
 def queue_listener():
     while True:
-        response = sqs.receive_message(QueueUrl=get_response_queue_url(),
-                                MaxNumberOfMessages=1,
-                                WaitTimeSeconds=10)
+        response = receive_message(get_response_queue_url());
         for message in response.get("Messages", []):
             message_body = message["Body"]
             file_output = message_body.split(','); 
@@ -30,7 +27,7 @@ def queue_listener():
             finally:
                 lock.release();
 
-            sqs.delete_message(QueueUrl=get_response_queue_url(), ReceiptHandle=message['ReceiptHandle']);
+            delete_message(get_response_queue_url(), message['ReceiptHandle']);
 
 async def get_output(file_name):
     while True:
@@ -53,9 +50,7 @@ async def recognize_image(file: UploadFile):
     body = json.dumps(message);
 
     # Send message to SQS queue
-    sqs.send_message(QueueUrl=get_request_queue_url(),
-                DelaySeconds=10,
-                MessageBody=body)
+    send_message(get_request_queue_url(),body);
     
     print("Sent " + file_name + " into the request queue");
     out = await get_output(file_name);
