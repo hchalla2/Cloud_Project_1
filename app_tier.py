@@ -4,48 +4,46 @@ import pathlib
 import os, subprocess,json,base64
 from s3_util import *
 from image_classification import classify_image;
+from constants import *;
 
-s3 = boto3.resource("s3", aws_access_key_id='AKIA52M3AL3AZ3O222CR', aws_secret_access_key='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')
-sqs = boto3.client("sqs", aws_access_key_id='AKIA52M3AL3AZ3O222CR', aws_secret_access_key='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', region_name='us-east-1');
-request_queue_url = 'https://sqs.us-east-1.amazonaws.com/950049726145/request_queue_hsh';
-response_queue_url = 'https://sqs.us-east-1.amazonaws.com/950049726145/response_queue_hsh';
+
+s3 = boto3.resource("s3", aws_access_key_id=get_access_key(), aws_secret_access_key=get_secret_key())
+sqs = boto3.client("sqs", aws_access_key_id=get_access_key(), aws_secret_access_key=get_secret_key(), region_name='us-east-1');
+tmp_folder = "/home/ubuntu/Cloud_Project_1/tmp/";
 
 while True:
 
-    response = sqs.receive_message(QueueUrl=request_queue_url,
+    response = sqs.receive_message(QueueUrl=get_request_queue_url(),
                                     MaxNumberOfMessages=1,
                                     WaitTimeSeconds=10)
 
 
     for message in response.get("Messages", []):
-        print("Message received");
         message_body = message["Body"]
         message_dict = json.loads(message_body);
         filename = message_dict['file_name'];
         file_contents = message_dict['file_content'];
 
-        sqs.delete_message(QueueUrl=request_queue_url, ReceiptHandle=message['ReceiptHandle']);
+        sqs.delete_message(QueueUrl=get_request_queue_url(), ReceiptHandle=message['ReceiptHandle']);
 
-        image_file_path = "/home/ubuntu/Cloud_Project_1/tmp/" + filename
+        image_file_path = tmp_folder + filename
         image_file = open(image_file_path, 'wb');
         image_file.write(base64.b64decode(bytes(file_contents, 'utf-8')))   
         image_file.close();
 
         output = classify_image(image_file_path);
-        print(output);
+        # print(output);
 
-        sqs.send_message(QueueUrl=response_queue_url, DelaySeconds=10, MessageBody=output)
-        print('Response sent');
+        sqs.send_message(QueueUrl=get_response_queue_url(), DelaySeconds=10, MessageBody=output)
+        # print('Response sent');
 
-        output_file_path = "/home/ubuntu/Cloud_Project_1/tmp/output_" + filename;
+        output_file_path = tmp_folder + "output_" + filename;
         output_file = open(output_file_path, 'wb');
         output_file.write(bytes(output, 'utf-8'));
         output_file.close();    
 
-        bucket_name = "output-bucket-hsh"
-        object_name = "output_" + filename
-        file_name = output_file_path;
-        store_file(bucket_name, file_name, object_name);
+        store_file(get_output_bucket(), output_file_path, "output_" + filename);
+        store_file(get_input_bucket(), image_file_path, filename);
 
         if os.path.exists(output_file_path):
             os.remove(output_file_path)

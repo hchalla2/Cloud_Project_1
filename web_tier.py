@@ -4,23 +4,18 @@ import json,base64;
 import threading,boto3;
 import asyncio
 import time;
+from constants import *;
 
 lock = threading.Lock()
 app = FastAPI()
 
 result_dict = {};
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-sqs = boto3.client("sqs", aws_access_key_id='AKIA52M3AL3AZ3O222CR', aws_secret_access_key='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', region_name='us-east-1');
-request_queue_url = 'https://sqs.us-east-1.amazonaws.com/950049726145/request_queue_hsh';
-response_queue_url = 'https://sqs.us-east-1.amazonaws.com/950049726145/response_queue_hsh';
+sqs = boto3.client("sqs", aws_access_key_id=get_access_key(), aws_secret_access_key=get_secret_key(), region_name='us-east-1');
 
 def queue_listener():
     while True:
-        response = sqs.receive_message(QueueUrl=response_queue_url,
+        response = sqs.receive_message(QueueUrl=get_response_queue_url(),
                                 MaxNumberOfMessages=1,
                                 WaitTimeSeconds=10)
         for message in response.get("Messages", []):
@@ -35,7 +30,7 @@ def queue_listener():
             finally:
                 lock.release();
 
-            sqs.delete_message(QueueUrl=response_queue_url, ReceiptHandle=message['ReceiptHandle']);
+            sqs.delete_message(QueueUrl=get_response_queue_url(), ReceiptHandle=message['ReceiptHandle']);
 
 async def get_output(file_name):
     while True:
@@ -58,7 +53,7 @@ async def recognize_image(file: UploadFile):
     body = json.dumps(message);
 
     # Send message to SQS queue
-    sqs.send_message(QueueUrl=request_queue_url,
+    sqs.send_message(QueueUrl=get_request_queue_url(),
                 DelaySeconds=10,
                 MessageBody=body)
     
