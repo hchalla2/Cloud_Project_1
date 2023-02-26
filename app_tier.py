@@ -3,6 +3,7 @@ from pprint import pprint
 import pathlib
 import os, subprocess,json,base64
 from s3_util import *
+from image_classification import classify_image;
 
 s3 = boto3.resource("s3", aws_access_key_id='AKIA52M3AL3AZ3O222CR', aws_secret_access_key='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')
 sqs = boto3.client("sqs", aws_access_key_id='AKIA52M3AL3AZ3O222CR', aws_secret_access_key='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', region_name='us-east-1');
@@ -30,7 +31,7 @@ while True:
         image_file.write(base64.b64decode(bytes(file_contents, 'utf-8')))   
         image_file.close();
 
-        output = subprocess.getoutput('python3 /home/ubuntu/image_classification.py ' + image_file_path);
+        output = classify_image(image_file_path);
         print(output);
 
         sqs.send_message(QueueUrl=response_queue_url, DelaySeconds=10, MessageBody=output)
