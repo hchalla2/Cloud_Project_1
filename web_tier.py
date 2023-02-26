@@ -39,14 +39,13 @@ def queue_listener():
 
 async def get_output(file_name):
     while True:
-        lock.acquire()
-        try:
+        with lock:
             if file_name in result_dict:
                 output = result_dict[file_name];
                 del result_dict[file_name];
-        finally:
-                lock.release();
-        return output;
+                return output;
+            else:
+                pass;
 
 @app.post("/recognize_image/")
 async def recognize_image(file: UploadFile):
