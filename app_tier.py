@@ -28,7 +28,7 @@ while True:
         file_contents = message_dict['file_content'];
         file_name_without_format = filename.split('.')[0] + ".txt";
 
-        sqs.delete_message(QueueUrl=get_request_queue_url(), ReceiptHandle=message['ReceiptHandle']);
+        delete_message(get_request_queue_url(), message['ReceiptHandle']);
 
         image_file_path = tmp_folder + filename
         save_file(image_file_path, base64.b64decode(bytes(file_contents, 'utf-8')))

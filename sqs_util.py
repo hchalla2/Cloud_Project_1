@@ -1,4 +1,5 @@
 import boto3;
+import config;
 
 sqs = boto3.client("sqs", aws_access_key_id=get_access_key(), aws_secret_access_key=get_secret_key(), region_name='us-east-1');
 

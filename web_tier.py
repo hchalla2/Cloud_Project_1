@@ -28,7 +28,7 @@ def queue_listener():
             finally:
                 lock.release();
 
-            sqs.delete_message(QueueUrl=get_response_queue_url(), ReceiptHandle=message['ReceiptHandle']);
+            delete_message(get_response_queue_url(), message['ReceiptHandle']);
 
 async def get_output(file_name):
     while True:
