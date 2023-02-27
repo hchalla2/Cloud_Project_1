@@ -6,11 +6,12 @@ from config import *;
 from sqs_util import *;
 
 app = FastAPI()
-
 lock = threading.Lock()
-
 result_dict = {};
 
+"""
+    This function continuously listens to the queue and updates the global data structure upon receiving the messages 
+"""
 def queue_listener():
     while True:
         response = receive_message(get_response_queue_url())
@@ -28,6 +29,9 @@ def queue_listener():
 
             delete_message(get_response_queue_url(), message['ReceiptHandle']);
 
+"""
+    This function continuously checks the global data structure and returns the output if its populated in the data structure 
+"""
 async def get_output(file_name):
     while True:
         await asyncio.sleep(1);
@@ -41,7 +45,7 @@ async def get_output(file_name):
 
 @app.post("/recognize_image/")
 async def recognize_image(file: UploadFile):
-    file_name = str(file.filename);
+    file = (await request.files)['myfile']
     file_content = file.file.read();
     converted_string = base64.b64encode(file_content)   
 
