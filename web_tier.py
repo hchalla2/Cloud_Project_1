@@ -45,8 +45,8 @@ async def get_output(file_name):
 
 @app.post("/recognize_image/")
 async def recognize_image(myfile: UploadFile):
-    file_name = str(file.filename);
-    file_content = file.file.read();
+    file_name = str(myfile.filename);
+    file_content = myfile.file.read();
     converted_string = base64.b64encode(file_content)   
 
     message = {'file_name' : file_name, 'file_content' : str(converted_string, 'utf-8')};
@@ -56,7 +56,6 @@ async def recognize_image(myfile: UploadFile):
     send_message(get_request_queue_url(), body);
     
     print("Sent " + file_name + " into the request queue");
-    print(file);
     out = await get_output(file_name);
     print("Response received:- for " + file_name + "  :- " + out);
     return {file_name : out };
