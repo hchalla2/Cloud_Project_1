@@ -45,6 +45,7 @@ async def get_output(file_name):
 
 @app.post("/recognize_image/")
 async def recognize_image(file: UploadFile):
+    print(file);
     file = file["myfile"];
     file_name = str(file.filename);
     file_content = file.file.read();
