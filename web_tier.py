@@ -1,4 +1,3 @@
-from quart import request;
 from fastapi import FastAPI, UploadFile
 import json,base64;
 import threading
@@ -45,8 +44,9 @@ async def get_output(file_name):
                 pass;
 
 @app.post("/recognize_image/")
-async def recognize_image():
-    file = (await request.files)['myfile']
+async def recognize_image(file: UploadFile):
+    file = file["myfile"];
+    file_name = str(file.filename);
     file_content = file.file.read();
     converted_string = base64.b64encode(file_content)   
 
