@@ -9,10 +9,16 @@ from sqs_util import *;
 
 tmp_folder = "/home/ubuntu/Cloud_Project_1/tmp/";
 
+"""
+    This function deletes file from disk of app instance.
+"""
 def remove_file(file_path):
     if os.path.exists(file_path):
         os.remove(file_path)
 
+"""
+    This function saves file to the disk of app instance.
+"""
 def save_file(file_path, file_content):
     image_file = open(file_path, 'wb');
     image_file.write(file_content)
@@ -35,10 +41,8 @@ while True:
         save_file(image_file_path, base64.b64decode(bytes(file_contents, 'utf-8')))
 
         output = classify_image(image_file_path);
-        # print(output);
 
         send_message(get_response_queue_url(), output)
-        # print('Response sent');
 
         output_file_path = tmp_folder + "output_" + file_name_without_format;
         save_file(output_file_path, bytes(output, 'utf-8'));

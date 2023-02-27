@@ -7,7 +7,12 @@ from sqs_util import *;
 
 app = FastAPI()
 lock = threading.Lock()
-result_dict = {};
+filename_output_map = {};
+
+def convert_image_to_string(file):
+    file_content = file.file.read();
+    converted_string = base64.b64encode(file_content)   
+    return str(converted_string, 'utf-8');
 
 """
     This function continuously listens to the queue and updates the global data structure upon receiving the messages 
@@ -23,7 +28,7 @@ def queue_listener():
 
             lock.acquire()
             try:                   
-                result_dict[file_name] = output;
+                filename_output_map[file_name] = output;
             finally:
                 lock.release();
 
@@ -32,13 +37,13 @@ def queue_listener():
 """
     This function continuously checks the global data structure and returns the output if its populated in the data structure 
 """
-async def get_output(file_name):
+async def fetch_output(file_name):
     while True:
         await asyncio.sleep(1);
         with lock:
-            if file_name in result_dict:
-                output = result_dict[file_name];
-                del result_dict[file_name];
+            if file_name in filename_output_map:
+                output = filename_output_map[file_name];
+                del filename_output_map[file_name];
                 return output;
             else:
                 pass;
@@ -46,17 +51,16 @@ async def get_output(file_name):
 @app.post("/recognize_image/")
 async def recognize_image(myfile: UploadFile):
     file_name = str(myfile.filename);
-    file_content = myfile.file.read();
-    converted_string = base64.b64encode(file_content)   
+    file_content = convert_image_to_string(myfile);
 
-    message = {'file_name' : file_name, 'file_content' : str(converted_string, 'utf-8')};
+    message = {'file_name' : file_name, 'file_content' : file_content};
     body = json.dumps(message);
 
     # Send message to SQS queue
     send_message(get_request_queue_url(), body);
     
     print("Sent " + file_name + " into the request queue");
-    out = await get_output(file_name);
+    out = await fetch_output(file_name);
     print("Response received:- for " + file_name + "  :- " + out);
     return {file_name : out };
 
